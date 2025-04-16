@@ -1,14 +1,13 @@
 # moon - 模块化发动机仿真框架
-论文发表后开源
-The model will be open source after publication of the paper
+**论文发表后开源 The model will be open source after publication of the paper**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://python.org)
 [![Cantera](https://img.shields.io/badge/dependency-Cantera-orange)](https://cantera.org)
 
 moon是基于Cantera化学反应动力学库构建的准维发动机仿真平台实验性项目，采用创新的ECS（实体-组件-系统）架构设计，
-为内燃机燃烧过程研究与稳态、动态性能仿真提供模块化解决方案。项目旨在建立可扩展的燃烧模型体系，当前已实现点燃式
-发动机的分形湍流燃烧核心算法，并集成早期火焰发展修正与近壁燃烧效应修正。
+为内燃机燃烧过程研究与稳态、动态性能仿真提供模块化解决方案。项目旨在建立可扩展的燃烧模型体系，
+当前已实现点燃式发动机的分形湍流燃烧核心算法，并集成早期火焰发展修正与近壁燃烧效应修正。
 ## 核心特性
 #### 🔥 先进燃烧建模
 - 分形湍流燃烧模型（Fractal Turbulence Combustion Model）
