@@ -22,6 +22,7 @@ moon是基于Cantera化学反应动力学库构建的准维发动机仿真平台
 #### ⚙️ 技术集成
 - Cantera化学动力学求解核心
 - 面向对象的Python API设计
+- 基于FastAPI的http API设计（开发中）
 - Godot图形用户界面（开发中）
 ## 快速开始
 
