@@ -1,3 +1,5 @@
+![icon](pictures/moon.png)
+
 # moon - 模块化发动机仿真框架
 **论文发表后开源 The model will be open source after publication of the paper**
 
