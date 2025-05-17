@@ -1,7 +1,7 @@
 ![icon](pictures/moon.png)
 
 # moon - 模块化发动机仿真框架
-**论文发表后开源 The model will be open source after publication of the paper**
+**项目暂处于开发阶段，完整功能尚未实现，API随时可能变动**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.13+-blue.svg)](https://python.org)
