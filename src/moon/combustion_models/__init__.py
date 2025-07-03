@@ -4,3 +4,4 @@
 @Time: 2025/1/22
 """
 from ._combustion_models import *
+from ._entrain_rate import *

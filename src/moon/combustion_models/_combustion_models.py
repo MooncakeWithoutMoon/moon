@@ -12,7 +12,7 @@ from numpy import pi
 
 from ..geometry import *
 from ..heat_transfer import *
-from .entrain_rate import *
+from ._entrain_rate import *
 
 
 class ZeroDimensional:

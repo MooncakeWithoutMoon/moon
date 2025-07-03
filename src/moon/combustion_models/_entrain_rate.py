@@ -12,6 +12,7 @@ from cantera import IdealGasReactor
 from numpy import exp, sqrt
 
 from ..geometry import *
+from ..flame_speed import *
 
 
 class EntrainRateBase(ABC):
@@ -58,9 +59,9 @@ class FractalTurbulent(EntrainRateBase):
 
     def __init__(self,
                  geometry: SITwoZoneGeometry,
-                 flame_speed: Callable[[IdealGasReactor], Callable[[float], float]],
+                 flame_speed: FlameSpeedBase,
                  volume_fraction_to_stop: float = 0.001,
-                 u_rms_0: float = 4,
+                 init_u_rms: float = 4,
                  reference_flame_radius: float = 0.006,
                  reference_engine_speed: float = 1000 / 60):
         """
@@ -68,14 +69,14 @@ class FractalTurbulent(EntrainRateBase):
         :param geometry: 发动机几何
         :param flame_speed: 火焰速度计算类
         :param volume_fraction_to_stop: 结束时的未燃区体积百分比
-        :param u_rms_0: 初始均方根湍流速度
+        :param init_u_rms: 初始均方根湍流速度
         :param reference_flame_radius: 参考火焰半径 [m]
         :param reference_engine_speed: 参考转速 [r/s]
         """
         self._geometry = geometry  # 发动机几何
-        self._flame_speed = flame_speed  # 火焰速度计算函数
+        self._flame_speed = flame_speed  # 火焰速度计算类
         self._end_volume_fraction = volume_fraction_to_stop  # 结束时的未燃区体积百分比
-        self._u_rms_0 = u_rms_0  # 初始均方根湍流速度
+        self._u_rms_0 = init_u_rms  # 初始均方根湍流速度
         self._reference_flame_radius = reference_flame_radius  # 参考火焰半径 [m]
         self._reference_engine_speed = reference_engine_speed  # 参考转速 [r/s]
 
@@ -94,7 +95,8 @@ class FractalTurbulent(EntrainRateBase):
         """
         rho_u0 = unburned.thermo.density_mass  # 初始密度
         bore = self._geometry.bore  # 缸径
-        flame_speed = self._flame_speed(unburned)  # 火焰速度计算函数
+        flame_speed_context = FlameSpeedContext(self._flame_speed)  # 火焰速度策略上下文
+        flame_speed = flame_speed_context.laminar_flame_speed(unburned)  # 火焰速度计算函数
         self._tau = 0  # 特征时间尺度 [s]
         self._m_u_tr = 0  # 壁面燃烧切换时刻的未燃区质量 [kg]
         self._is_tr = False  # 是否开始分形与壁面燃烧切换

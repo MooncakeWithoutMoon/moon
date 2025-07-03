@@ -8,6 +8,7 @@ __all__ = ['FlameSpeedBase', 'FlameSpeedContext', 'MethanolHydrogenFlameSpeed']
 
 import pathlib
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from numpy import array, sum
 from pandas import read_csv
@@ -20,15 +21,8 @@ class FlameSpeedBase(ABC):
     策略接口
     """
 
-    def __init__(self, unburned: IdealGasReactor):
-        """
-        策略接口
-        :param unburned: 未燃区反应器
-        """
-        self.unburned = unburned  # 未燃区反应器
-
     @abstractmethod
-    def laminar_flame_speed(self) -> float:
+    def laminar_flame_speed(self, unburned: IdealGasReactor) -> Callable[[float], float]:
         """
         层流火焰速度接口
         :return: 层流火焰速度 [m/s]
@@ -51,12 +45,12 @@ class FlameSpeedContext:
             raise TypeError('flame_speed must inherit FlameSpeedBase')
         self.strategy = flame_speed  # 层流火焰速度计算策略类
 
-    def laminar_flame_speed(self) -> float:
+    def laminar_flame_speed(self, unburned: IdealGasReactor) -> Callable[[float], float]:
         """
         执行策略计算层流火焰速度
         :return: 层流火焰速度 [m/s]
         """
-        return self.strategy.laminar_flame_speed()
+        return self.strategy.laminar_flame_speed(unburned)
 
 
 class MethanolHydrogenFlameSpeed(FlameSpeedBase):
@@ -64,13 +58,12 @@ class MethanolHydrogenFlameSpeed(FlameSpeedBase):
     甲醇-氢火焰速度
     """
 
-    def __init__(self, unburned: IdealGasReactor, boundary_warning: bool = True):
+    def __init__(self, boundary_warning: bool = True):
         """
         甲醇-氢火焰速度
-        :param unburned: 未燃区反应器
         :param boundary_warning: 是否发出参数越界警告
         """
-        super().__init__(unburned)
+        super().__init__()
         self.boundary_warning = boundary_warning  # 是否发出参数越界警告
         self._data_ranges = {
             'equivalence ratio': {'range': (0.6, 1.5), 'unit': None},
@@ -92,28 +85,37 @@ class MethanolHydrogenFlameSpeed(FlameSpeedBase):
         self._d = array(fit_coefficients['d'].dropna())
         self._T_ref = 400  # 参考温度 [K]
         self._p_ref = 1e5  # 参考压力 [Pa]
-        self._CO2_index = self.unburned.thermo.species_index('CO2')  # CO2索引
-        self._H2_index = self.unburned.thermo.species_index('H2')  # H2索引
+        # 计算中间参数
+        self._unburned: IdealGasReactor | None = None  # 未燃区反应器
+        self._CO2_index = None  # CO2索引
+        self._H2_index = None  # H2索引
 
-    def laminar_flame_speed(self) -> float:
+    def laminar_flame_speed(self, unburned: IdealGasReactor) -> Callable[[float], float]:
         """
         层流火焰速度
         :return: 层流火焰速度 [m/s]
         """
-        phi = self.unburned.thermo.equivalence_ratio()
-        t_u = self.unburned.thermo.T
-        p = self.unburned.thermo.P
-        # CO2质量分数到残余气体质量分数的映射, 基于纯甲醇燃烧推导得到
-        y_dil = self.unburned.thermo.Y[self._CO2_index] * 32 * (phi + 6.43715625) / (44 * phi)
-        alpha_h2 = self.unburned.thermo.X[self._H2_index]
-        # 对各参数做范围检查
-        if self.boundary_warning is True:
-            values = [phi, t_u, p, y_dil, alpha_h2]
-            for key, value in zip(self._data_ranges.keys(), values):
-                self._check_parameter(key, value)
-        s_l = self._s_l(phi, t_u, p, y_dil, alpha_h2)
-        # 确保层流火焰速度大于0
-        return max(s_l, 0)
+        self._unburned = unburned
+        self._CO2_index = unburned.thermo.species_index('CO2')
+        self._H2_index = unburned.thermo.species_index('H2')
+
+        def func(time: float) -> float:
+            phi = self._unburned.thermo.equivalence_ratio()
+            t_u = self._unburned.thermo.T
+            p = self._unburned.thermo.P
+            # CO2质量分数到残余气体质量分数的映射, 基于纯甲醇燃烧推导得到
+            y_dil = self._unburned.thermo.Y[self._CO2_index] * 32 * (phi + 6.43715625) / (44 * phi)
+            alpha_h2 = self._unburned.thermo.X[self._H2_index]
+            # 对各参数做范围检查
+            if self.boundary_warning:
+                values = [phi, t_u, p, y_dil, alpha_h2]
+                for key, value in zip(self._data_ranges.keys(), values):
+                    self._check_parameter(key, value)
+            s_l = self._s_l(phi, t_u, p, y_dil, alpha_h2)
+            # 确保层流火焰速度大于0
+            return max(s_l, 0)
+
+        return func
 
     def _s_l(self, phi: float, t_u: float, p: float, y_dil: float, alpha_h2: float) -> float:
         """
