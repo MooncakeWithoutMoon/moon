@@ -120,7 +120,10 @@ class FractalTurbulent(EntrainRateBase):
                 nu = unburned.thermo.viscosity / rho_u  # 未燃区运动粘度
                 k_s = sqrt(epsilon / nu) / 3.55 ** (2 / 3)  # 火焰拉伸系数
                 k_e = 0  # 火焰拉伸系数
-                u_l = s_l * (1 - nu / s_l ** 2 * (k_e + k_s))  # 拉伸的火焰速度
+                if s_l == 0:
+                    return 0
+                else:
+                    u_l = s_l * (1 - nu / s_l ** 2 * (k_e + k_s))  # 拉伸的火焰速度
                 ll = l_i / (nu ** 3 / epsilon) ** 0.25  # 火焰褶皱尺度比
                 omiga_wr = (r_f / self._reference_flame_radius * self._geometry.speed /
                             self._reference_engine_speed)  # 无量纲火焰褶皱率

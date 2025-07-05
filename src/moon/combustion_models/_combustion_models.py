@@ -116,7 +116,7 @@ class TwoZoneModel:
             unburned_volume=init_volume * (1 - self._fire_core_volume_fraction)
         )
         # 添加火花塞
-        spark_plug = Wall(result["environment"], result["burned"])
+        spark_plug = Wall(result["environment"], result["burned zone"])
         spark_plug.heat_flux = self._ignition_time_function
         result["spark plug"] = spark_plug
         return result
